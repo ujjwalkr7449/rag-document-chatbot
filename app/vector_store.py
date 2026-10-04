@@ -1,6 +1,7 @@
 
 from langchain_community.vectorstores import FAISS
 from app.embeddings import get_embeddings
+from pathlib import Path
 
 
 VECTOR_DIR = Path("vector_store")

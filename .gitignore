@@ -1,0 +1,44 @@
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Environment variables and API keys
+.env
+.env.*
+!.env.example
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Uploaded documents (may contain private data)
+uploads/*
+!uploads/.gitkeep
+
+# FAISS vector database files
+vector_store/*
+!vector_store/.gitkeep
+
+# IDE settings
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
