@@ -157,3 +157,14 @@ with st.sidebar:
         st.warning(
             "Upload and process a PDF first."
         )
+        
+
+# -----------------------------
+# Chat History
+# -----------------------------
+
+for message in st.session_state.messages:
+
+    with st.chat_message(message["role"]):
+
+        st.markdown(message["content"])
