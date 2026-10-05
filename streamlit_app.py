@@ -168,3 +168,112 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
 
         st.markdown(message["content"])
+        
+# -----------------------------
+# Chat Input
+# -----------------------------
+
+question = st.chat_input(
+    "Ask something about your PDF..."
+)
+
+
+if question:
+
+    # Check document
+    if not st.session_state.document_id:
+
+        st.warning(
+            "Please upload and process a PDF first."
+        )
+
+        st.stop()
+
+
+    # Display user message
+
+    st.session_state.messages.append(
+        {
+            "role": "user",
+            "content": question,
+        }
+    )
+
+    with st.chat_message("user"):
+        st.markdown(question)
+
+
+    # Ask backend
+
+    with st.chat_message("assistant"):
+
+        with st.spinner("Thinking..."):
+
+            try:
+
+                response = requests.post(
+                    f"{API_URL}/ask",
+                    json={
+                        "document_id":
+                            st.session_state.document_id,
+                        "question": question,
+                    },
+                    timeout=120,
+                )
+
+
+                if response.status_code == 200:
+
+                    data = response.json()
+
+                    answer = data["answer"]
+
+                    st.markdown(answer)
+
+
+                    # Sources
+
+                    sources = data.get(
+                        "sources",
+                        [],
+                    )
+
+                    if sources:
+
+                        with st.expander(
+                            "📚 Retrieved Sources"
+                        ):
+
+                            for source in sources:
+
+                                st.write(source)
+
+
+                    # Save assistant response
+
+                    st.session_state.messages.append(
+                        {
+                            "role": "assistant",
+                            "content": answer,
+                        }
+                    )
+
+
+                else:
+
+                    st.error(
+                        response.text
+                    )
+
+            except requests.exceptions.ConnectionError:
+
+                st.error(
+                    "Could not connect to FastAPI backend."
+                )
+
+            except requests.exceptions.Timeout:
+
+                st.error(
+                    "The request took too long. "
+                    "Please try again."
+                )
