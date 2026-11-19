@@ -18,7 +18,11 @@ def retrieve_context(
     )
 
     sources = [
-        result.metadata for result in results
+        {
+            **result.metadata,
+            "snippet": result.page_content[:300].strip() + ("..." if len(result.page_content) > 300 else ""),
+        }
+        for result in results
     ]
 
     return context, sources

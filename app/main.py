@@ -1,15 +1,16 @@
-
+import json
 from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.document import extract_text
 from app.chunking import split_text
 from app.vector_store import save_vector_store
 from app.retrieval import retrieve_context
-from app.qa import answer_question
+from app.qa import answer_question, stream_answer
 
 
 app = FastAPI(title="RAG Document Chatbot")
@@ -70,7 +71,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 
 @app.post("/ask")
-def ask_question(request: QuestionRequest):
+def ask_question_endpoint(request: QuestionRequest):
     try:
         context, sources = retrieve_context(
             request.document_id,
@@ -92,6 +93,39 @@ def ask_question(request: QuestionRequest):
             "answer": answer,
             "sources": sources,
         }
+
+    except FileNotFoundError as exc:
+        raise HTTPException(
+            404, "Document or vector store not found"
+        ) from exc
+
+
+@app.post("/ask/stream")
+def ask_question_stream_endpoint(request: QuestionRequest):
+    try:
+        context, sources = retrieve_context(
+            request.document_id,
+            request.question,
+        )
+
+        if not context.strip():
+            raise HTTPException(
+                404, "No relevant document content found"
+            )
+
+        def event_stream():
+            # Initial event with sources
+            yield f"data: {json.dumps({'type': 'sources', 'sources': sources})}\n\n"
+            # Stream token chunks
+            for token in stream_answer(request.question, context):
+                yield f"data: {json.dumps({'type': 'token', 'content': token})}\n\n"
+            # Done event
+            yield f"data: {json.dumps({'type': 'done'})}\n\n"
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+        )
 
     except FileNotFoundError as exc:
         raise HTTPException(
