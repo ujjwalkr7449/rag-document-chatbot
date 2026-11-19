@@ -160,8 +160,7 @@ with st.sidebar:
     selected_model = st.selectbox(
         "Groq Model",
         options=[
-            "llama-3.3-70b-versatile",
-            "llama-3.1-8b-instant",
+            "openai/gpt-oss-120b"
         ],
         index=0,
         help="llama-3.3-70b provides high reasoning quality; llama-3.1-8b is ultra-fast.",
